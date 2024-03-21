@@ -26,8 +26,29 @@ router.get('/:id', function(req, res, next) {
     };
   });
 
-  res.json(find);
+  if (!find.id) {
+    res.json({message: "Not found"});
+  } else {
+    res.json(find);
+  }
 });
 
+// router.get('/category/:categoryId', function(req, res, next) {
+//   console.log('««««« req.params »»»»»', req.params);
+//   console.log('««««« req.query »»»»»', req.query);
+//   let find = {};
+
+//   products.forEach((item) => {
+//     if (item.id == req.params.id) {
+//       find = item;
+//     };
+//   });
+
+//   if (!find.id) {
+//     res.json({message: "Not found"});
+//   } else {
+//     res.json(find);
+//   }
+// });
 
 module.exports = router;
