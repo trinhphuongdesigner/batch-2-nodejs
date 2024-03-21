@@ -9,10 +9,25 @@ router.get('/all', function(req, res, next) {
 
 router.get('/first', function(req, res, next) {
   const newList = products.filter((item, index) => {
-    if (index < 3) return item;
+    if (index < 2) return item;
   });
 
   res.json(newList);
 });
+
+router.get('/:id', function(req, res, next) {
+  console.log('««««« req.params »»»»»', req.params);
+  console.log('««««« req.query »»»»»', req.query);
+  let find = {};
+
+  products.forEach((item) => {
+    if (item.id == req.params.id) {
+      find = item;
+    };
+  });
+
+  res.json(find);
+});
+
 
 module.exports = router;
