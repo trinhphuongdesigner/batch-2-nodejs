@@ -14,7 +14,8 @@ const { checkCreateProductSchema } = require('./validation');
 
 router.route('/')
   .get(getAllProduct)
-  .post(validateSchema(checkCreateProductSchema), createProduct)
+  .post(createProduct)
+  // .post(validateSchema(checkCreateProductSchema), createProduct)
 
 router.route('/list')
   .get(getListProduct)

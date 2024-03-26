@@ -62,9 +62,14 @@ module.exports = {
 
   createProduct: (req, res, next) => {
     try {
-      const { name, price } = req.body;
+      // req: {
+      //   query,
+      //   params,
+      //   body,
+      // }
+      const { name, price, description } = req.body;
   
-      const newP = { id: generationID(), name, price };
+      const newP = { id: generationID(), name, price, description };
   
       data = [...data, newP];
   
