@@ -3,7 +3,7 @@ var router = express.Router();
 let products = require('../data/products.json');
 
 /* GET home page. */
-router.get('/all', function(req, res, next) {
+router.get('/', function(req, res, next) {
   res.json(products);
 });
 

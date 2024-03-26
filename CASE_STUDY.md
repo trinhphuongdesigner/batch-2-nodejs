@@ -10,4 +10,7 @@ Buổi 2:
   - Test với products
 
   => Bài tập: Tạo categories và get all, get list, get detail.
-  
+
+Buổi 3:
+  - router.[method('entrypoint', function Xử lý)]
+  - router.route('entrypoint').method(function Xử lý)
