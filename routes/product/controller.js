@@ -188,6 +188,17 @@ module.exports = {
   deleteProduct: (req, res, next) => {
     try {
       const { id } = req.params;
+
+      const findObject = data.find(item => item.id === +id)
+
+      if (!findObject || findObject.isDeleted) {
+        return res.send(
+          404,
+          {
+            message: "Sản phẩm không tồn tại",
+          },
+        );
+      }
   
       data = data.filter((item) => item.id !== +id)
   
