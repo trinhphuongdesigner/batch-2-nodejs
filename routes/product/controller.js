@@ -69,10 +69,10 @@ module.exports = {
       // }
       const { name, price, description } = req.body;
   
-      const newP = { id: generationID(), name, price, description };
+      const newProduct = { id: generationID(), name, price, description };
   
-      data = [...data, newP];
-  
+      data = [...data, newProduct];
+
       writeFileSync("data/products.json", data);
   
       return res.send(
@@ -98,6 +98,15 @@ module.exports = {
         name,
         price,
       };
+
+      if (!data.find(item => item.id === +id)) {
+        return res.send(
+          404,
+          {
+            message: "Sản phẩm không tồn tại",
+          },
+        );
+      }
   
       data = data.map((item) => {
         if (item.id === +id) {

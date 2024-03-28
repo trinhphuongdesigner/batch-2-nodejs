@@ -7,6 +7,7 @@ const { checkCreateProductSchema } = require('./validation');
 
 // router.get('/', getAllProduct);
 // router.post('/', validateSchema(checkCreateSchema), createProduct);
+
 // router.get('/:id', validateSchema(checkIdSchema), getDetailProduct);
 // router.put('/:id', putProduct);
 // router.patch('/:id', patchProduct)
@@ -23,7 +24,8 @@ router.route('/list')
 router.route('/:id')
   .get(getDetailProduct)
   // .get(validateSchema(checkIdSchema), getDetailProduct)
-  .put(validateSchema(checkIdSchema), putProduct)
+  .put(putProduct)
+  // .put(validateSchema(checkIdSchema), putProduct)
   .patch(validateSchema(checkIdSchema), patchProduct)
   .delete(validateSchema(checkIdSchema), deleteProduct)
 
