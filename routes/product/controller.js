@@ -99,7 +99,10 @@ module.exports = {
         price,
       };
 
-      if (!data.find(item => item.id === +id)) {
+      // Kiểm tra ID có tồn tại không?
+      const findObject = data.find(item => item.id === +id)
+
+      if (!findObject) {
         return res.send(
           404,
           {
@@ -107,14 +110,26 @@ module.exports = {
           },
         );
       }
+
+      // const isValidId = false;
   
       data = data.map((item) => {
         if (item.id === +id) {
+          // isValidId = true;
           return updateData;
         }
   
         return item;
       })
+
+      // if(!isValidId) {
+      //   return res.send(
+      //     404,
+      //     {
+      //       message: "Sản phẩm không tồn tại",
+      //     },
+      //   );
+      // }
   
       writeFileSync("data/products.json", data);
   
@@ -144,8 +159,6 @@ module.exports = {
             name: name || item.name,
             price: price || item.price,
           };
-  
-          console.log('««««« updateData »»»»»', updateData);
   
           return updateData;
         }

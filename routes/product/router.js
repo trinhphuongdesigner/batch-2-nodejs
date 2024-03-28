@@ -26,7 +26,8 @@ router.route('/:id')
   // .get(validateSchema(checkIdSchema), getDetailProduct)
   .put(putProduct)
   // .put(validateSchema(checkIdSchema), putProduct)
-  .patch(validateSchema(checkIdSchema), patchProduct)
+  .patch(patchProduct)
+  // .patch(validateSchema(checkIdSchema), patchProduct)
   .delete(validateSchema(checkIdSchema), deleteProduct)
 
 module.exports = router;
