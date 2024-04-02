@@ -1,0 +1,218 @@
+let data = require('../../data/categories.json');
+const { sendErr, generationID, writeFileSync } = require('../../utils');
+
+module.exports = {
+  getAllCategory: (req, res, next) => {
+    try {
+      return res.send(data);
+    } catch (error) {
+      console.log('««««« error »»»»»', error);
+      return res.send(400, { message: "Không thành công" });
+    }
+  },
+
+  getListCategory: (req, res, next) => {
+    try {
+      const { limit } = req.query;
+
+      const newList = data.filter((item, index) => {
+        if (index < limit) return item;
+      });
+
+      return res.send(
+        202,
+        {
+          message: "Lấy danh sách thành công",
+          payload: newList,
+        },
+      );
+    } catch (error) {
+      console.log('««««« error »»»»»', error);
+      return res.send(400, { message: "Không thành công" });
+    }
+  },
+
+  getDetailCategory: (req, res, next) => {
+    try {
+      const { id } = req.params;
+  
+      const detail = data.find((item) => item.id.toString() == id);
+  
+      if (!detail) {
+        return res.send(
+          404,
+          {
+            message: "Không tìm thấy",
+          },
+        );
+      }
+  
+      return res.send(
+        202,
+        {
+          message: "Lấy thông tin thành công",
+          payload: detail,
+        },
+      );
+    } catch (error) {
+      console.log('««««« error »»»»»', error);
+      return sendErr(res);
+    }
+  },
+
+  createCategory: (req, res, next) => {
+    try {
+      // req: {
+      //   query,
+      //   params,
+      //   body,
+      // }
+      const { name, description } = req.body;
+  
+      const newCategory = { id: generationID(), name, description, isDeleted: false };
+  
+      data = [...data, newCategory];
+
+      writeFileSync("data/categories.json", data);
+  
+      return res.send(
+        202,
+        {
+          message: "Tạo danh mục thành công",
+          payload: newCategory,
+        },
+      );
+    } catch (error) {
+      console.log('««««« error »»»»»', error);
+      sendErr(res);
+    }
+  },
+
+  putCategory: (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { name, description } = req.body;
+  
+      const updateData = {
+        id: +id,
+        name,
+        description,
+      };
+
+      // Kiểm tra ID có tồn tại không?
+      const findObject = data.find(item => item.id === +id)
+
+      if (!findObject) {
+        return res.send(
+          404,
+          {
+            message: "Sản phẩm không tồn tại",
+          },
+        );
+      }
+
+      // const isValidId = false;
+  
+      data = data.map((item) => {
+        if (item.id === +id) {
+          // isValidId = true;
+          return updateData;
+        }
+  
+        return item;
+      })
+
+      // if(!isValidId) {
+      //   return res.send(
+      //     404,
+      //     {
+      //       message: "Sản phẩm không tồn tại",
+      //     },
+      //   );
+      // }
+  
+      writeFileSync("data/categories.json", data);
+  
+      return res.send(
+        202,
+        {
+          message: "Cập nhật danh mục thành công",
+          payload: updateData,
+        },
+      );
+    } catch (error) {
+      console.log('««««« error »»»»»', error);
+      return sendErr(res);
+    }
+  },
+
+  patchCategory: (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { name, description } = req.body;
+      let updateData = {};
+  
+      data = data.map((item) => {
+        if (item.id === +id) {
+          updateData = {
+            ...item,
+            name: name || item.name,
+            description: description || item.description,
+          };
+  
+          return updateData;
+        }
+  
+        return item;
+      });
+  
+      writeFileSync("data/categories.json", data);
+  
+      if (updateData) {
+        return res.send(
+          202,
+          {
+            message: "Cập nhật danh mục thành công",
+            payload: updateData,
+          },
+        );
+      }
+  
+      return sendErr(res);
+    } catch (error) {
+      console.log('««««« error »»»»»', error);
+      return sendErr(res);
+    }
+  },
+
+  deleteCategory: (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      const findObject = data.find(item => item.id === +id)
+
+      if (!findObject || findObject.isDeleted) {
+        return res.send(
+          404,
+          {
+            message: "Sản phẩm không tồn tại",
+          },
+        );
+      }
+  
+      data = data.filter((item) => item.id !== +id)
+  
+      writeFileSync("data/categories.json", data);
+  
+      return res.send(
+        202,
+        {
+          message: "Xóa danh mục thành công",
+        },
+      );
+    } catch (error) {
+      console.log('««««« error »»»»»', error);
+      return sendErr(res);
+    };
+  },
+}
