@@ -13,4 +13,14 @@ module.exports = {
       // }),
     }),
   }),
+
+  checkUpdateProductSchema: yup.object({
+    params: yup.object({
+      id: yup.number().min(0),
+    }),
+    body: yup.object({
+      name: yup.string().required(),
+      price: yup.number().min(0).required(),
+    }),
+  }),
 };

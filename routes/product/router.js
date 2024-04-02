@@ -3,7 +3,7 @@ var router = express.Router();
 
 let { validateSchema, checkIdSchema } = require('../../utils');
 const { getAllProduct, getDetailProduct, createProduct, putProduct, patchProduct, deleteProduct, getListProduct } = require('./controller');
-const { checkCreateProductSchema } = require('./validation');
+const { checkCreateProductSchema, checkUpdateProductSchema } = require('./validation');
 
 // router.get('/', getAllProduct);
 // router.post('/', validateSchema(checkCreateSchema), createProduct);
@@ -24,8 +24,9 @@ router.route('/list')
 router.route('/:id')
   .get(getDetailProduct)
   // .get(validateSchema(checkIdSchema), getDetailProduct)
-  .put(putProduct)
-  // .put(validateSchema(checkIdSchema), putProduct)
+  // .put(putProduct)
+  // .put(validateSchema(checkIdSchema), validateSchema(checkCreateProductSchema), putProduct)
+  .put(validateSchema(checkUpdateProductSchema), putProduct)
   .patch(patchProduct)
   // .patch(validateSchema(checkIdSchema), patchProduct)
   .delete(validateSchema(checkIdSchema), deleteProduct)
