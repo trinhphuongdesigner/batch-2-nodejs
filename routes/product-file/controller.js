@@ -1,24 +1,10 @@
-// let data = require('../../data/products.json');
-const { default: mongoose } = require('mongoose');
-const Product = require('../../models/product');
-
-mongoose.connect('mongodb://localhost:27017/node-02-database');
-// mongoose.connect('mongodb://127.0.0.1:27017/training-database');
-
+let data = require('../../data/products.json');
 const { sendErr, generationID, writeFileSync } = require('../../utils');
 
 module.exports = {
-  getAllProduct: async (req, res, next) => {
+  getAllProduct: (req, res, next) => {
     try {
-      let results = await Product.find()
-
-      return res.send(
-        202,
-        {
-          message: "Lấy danh sách sản phẩm thành công",
-          payload: results,
-        },
-      );
+      return res.send(data);
     } catch (error) {
       console.log('««««« error »»»»»', error);
       return res.send(400, { message: "Không thành công" });
@@ -74,19 +60,26 @@ module.exports = {
     }
   },
 
-  createProduct: async (req, res, next) => {
+  createProduct: (req, res, next) => {
     try {
-      const { name, price, discount } = req.body;
+      // req: {
+      //   query,
+      //   params,
+      //   body,
+      // }
+      const { name, price, description } = req.body;
   
-      const newItem = new Product({ name, price, discount });
+      const newProduct = { id: generationID(), name, price, description };
+  
+      data = [...data, newProduct];
 
-      const result = await newItem.save();
+      writeFileSync("data/products.json", data);
   
       return res.send(
         202,
         {
           message: "Tạo sản phẩm thành công",
-          payload: result,
+          payload: newP,
         },
       );
     } catch (error) {
