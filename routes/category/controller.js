@@ -5,9 +5,15 @@ const { Category } = require('../../models');
 // const Product = require("../../models/product")
 
 module.exports = {
-  getAllCategory: (req, res, next) => {
+  getAllCategory: async (req, res, next) => {
     try {
-      return res.send(data);
+      const result = await Category.find({});
+
+      return res.send({
+        statusCode: 201,
+        message: 'Get all category successfully',
+        payload: result
+      });
     } catch (error) {
       console.log('««««« error »»»»»', error);
       return res.send(400, { message: "Không thành công" });
@@ -35,13 +41,15 @@ module.exports = {
     }
   },
 
-  getDetailCategory: (req, res, next) => {
+  getDetailCategory: async (req, res, next) => {
     try {
       const { id } = req.params;
-  
-      const detail = data.find((item) => item.id.toString() == id);
-  
-      if (!detail) {
+
+      // const result = await  Category.find({ _id: id }); => return arr
+      // const result = await  Category.findOne({ _id: id }); => return object
+      const result = await  Category.findById(id); // => return object
+
+      if (!result) {
         return res.send(
           404,
           {
@@ -54,7 +62,7 @@ module.exports = {
         202,
         {
           message: "Lấy thông tin thành công",
-          payload: detail,
+          payload: result,
         },
       );
     } catch (error) {
@@ -69,7 +77,7 @@ module.exports = {
   
       const newCategory = new Category({ name, description });
   
-      const result = await newCategory.save()
+      const result = await newCategory.save();
   
       return res.send(
         202,
@@ -84,97 +92,26 @@ module.exports = {
     }
   },
 
-  putCategory: (req, res, next) => {
+  putCategory: async (req, res, next) => {
     try {
       const { id } = req.params;
       const { name, description } = req.body;
-  
-      const updateData = {
-        id: +id,
-        name,
-        description,
-      };
 
-      // Kiểm tra ID có tồn tại không?
-      const findObject = data.find(item => item.id === +id)
+      const result = await Category.findByIdAndUpdate(
+        id,
+        { name, description},
+        {
+          new: true,
+        },
+      )
 
-      if (!findObject) {
-        return res.send(
-          404,
-          {
-            message: "Sản phẩm không tồn tại",
-          },
-        );
-      }
-
-      // const isValidId = false;
-  
-      data = data.map((item) => {
-        if (item.id === +id) {
-          // isValidId = true;
-          return updateData;
-        }
-  
-        return item;
-      })
-
-      // if(!isValidId) {
-      //   return res.send(
-      //     404,
-      //     {
-      //       message: "Sản phẩm không tồn tại",
-      //     },
-      //   );
-      // }
-  
-      writeFileSync("data/categories.json", data);
-  
       return res.send(
         202,
         {
           message: "Cập nhật danh mục thành công",
-          payload: updateData,
+          payload: result,
         },
       );
-    } catch (error) {
-      console.log('««««« error »»»»»', error);
-      return sendErr(res);
-    }
-  },
-
-  patchCategory: (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { name, description } = req.body;
-      let updateData = {};
-  
-      data = data.map((item) => {
-        if (item.id === +id) {
-          updateData = {
-            ...item,
-            name: name || item.name,
-            description: description || item.description,
-          };
-  
-          return updateData;
-        }
-  
-        return item;
-      });
-  
-      writeFileSync("data/categories.json", data);
-  
-      if (updateData) {
-        return res.send(
-          202,
-          {
-            message: "Cập nhật danh mục thành công",
-            payload: updateData,
-          },
-        );
-      }
-  
-      return sendErr(res);
     } catch (error) {
       console.log('««««« error »»»»»', error);
       return sendErr(res);

@@ -14,3 +14,8 @@ Buổi 2:
 Buổi 3:
   - router.[method('entrypoint', function Xử lý)]
   - router.route('entrypoint').method(function Xử lý)
+
+Buổi 6:
+  - Bài tập: CRUD với category và product (không cần categoryId và supplierId)
+  - Phải có Yup để check validation trước khi xử lý trong controller
+  - Có define rule trong models

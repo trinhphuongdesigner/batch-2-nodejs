@@ -1,6 +1,6 @@
 // let data = require('../../data/products.json');
 const { default: mongoose } = require('mongoose');
-const Product = require('../../models/product');
+const { Product } = require('../../models');
 
 mongoose.connect('mongodb://localhost:27017/node-02-database');
 // mongoose.connect('mongodb://127.0.0.1:27017/training-database');
@@ -10,7 +10,7 @@ const { sendErr, generationID, writeFileSync } = require('../../utils');
 module.exports = {
   getAllProduct: async (req, res, next) => {
     try {
-      let results = await Product.find()
+      let results = await Product.find();
 
       return res.send(
         202,
