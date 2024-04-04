@@ -77,7 +77,7 @@ module.exports = {
   createProduct: async (req, res, next) => {
     try {
       const { name, price, discount } = req.body;
-  
+
       const newItem = new Product({ name, price, discount });
 
       const result = await newItem.save();
