@@ -1,5 +1,8 @@
 let data = require('../../data/categories.json');
 const { sendErr, generationID, writeFileSync } = require('../../utils');
+const { Category } = require('../../models');
+// const Category = require("../../models/category")
+// const Product = require("../../models/product")
 
 module.exports = {
   getAllCategory: (req, res, next) => {
@@ -60,26 +63,19 @@ module.exports = {
     }
   },
 
-  createCategory: (req, res, next) => {
+  createCategory: async (req, res, next) => {
     try {
-      // req: {
-      //   query,
-      //   params,
-      //   body,
-      // }
       const { name, description } = req.body;
   
-      const newCategory = { id: generationID(), name, description, isDeleted: false };
+      const newCategory = new Category({ name, description });
   
-      data = [...data, newCategory];
-
-      writeFileSync("data/categories.json", data);
+      const result = await newCategory.save()
   
       return res.send(
         202,
         {
           message: "Tạo danh mục thành công",
-          payload: newCategory,
+          payload: result,
         },
       );
     } catch (error) {
