@@ -1,21 +1,31 @@
 var express = require('express');
 var router = express.Router();
 
-let { validateSchema, checkIdSchema } = require('../../utils');
-const { getAllProduct, getDetailProduct, createProduct, putProduct, patchProduct, deleteProduct, getListProduct } = require('./controller');
-const { checkCreateProductSchema, checkUpdateProductSchema } = require('./validation');
+const { validateSchema, checkIdSchema } = require('../../utils')
+
+const { getDetail, getList, getAll, search, create, update, updatePatch, hardDelete, softDelete, fake } = require('./controller');
+const { validationSchema, validationQuerySchema } = require('./validation');
+
+router.route('/all')
+  .get(getAll);
 
 router.route('/')
-  .get(getAllProduct)
-  .post(validateSchema(checkCreateProductSchema), createProduct)
+  .get(getList)
+  .post(validateSchema(validationSchema), create)
 
-router.route('/list')
-  .get(getListProduct)
+router.route('/fake')
+  .post(fake)
+
+router.route('/')
+  .get(getList)
+  .post(validateSchema(validationSchema), create)
+
+router.get('/search', validateSchema(validationQuerySchema), search);
 
 router.route('/:id')
-  .get(getDetailProduct)
-  // .put(validateSchema(checkIdSchema), validateSchema(checkCreateProductSchema), putProduct)
-  .put(validateSchema(checkUpdateProductSchema), putProduct)
-  .delete(validateSchema(checkIdSchema), deleteProduct)
+  .get(validateSchema(checkIdSchema), getDetail)
+  .put(validateSchema(checkIdSchema), validateSchema(validationSchema), update)
+
+router.patch('/delete/:id', softDelete);
 
 module.exports = router;

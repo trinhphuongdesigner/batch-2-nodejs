@@ -3,16 +3,14 @@ const { Schema, model } = mongoose;
 
 const categorySchema = new Schema(
   {
-    // name: { type: String, required: true },
     name: {
       type: String,
       // required: true,
+      // maxLength: 50,
       required: [true, 'Tên danh mục không được bỏ trống'],
-      // maxLength: 5,
       maxLength: [50, 'Tên danh mục không được vượt quá 50 ký tự'],
-      // unique: [true, 'Tên danh mục không được trùng'],
+      unique: [true, 'Tên danh mục không được trùng'],
     },
-    // description: String,
     description: {
       type: String,
       maxLength: [500, 'Mô tả danh mục không được vượt quá 500 ký tự'],

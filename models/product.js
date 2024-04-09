@@ -51,10 +51,10 @@ productSchema.virtual('supplier', {
   justOne: true,
 });
 
-// // Config
+// Config
 productSchema.set('toJSON', { virtuals: true });
 productSchema.set('toObject', { virtuals: true });
-// //
+//
 productSchema.plugin(mongooseLeanVirtuals);
 
 const Product = model('products', productSchema);
