@@ -25,21 +25,25 @@ module.exports = {
     }
   },
 
-  getListProduct: (req, res, next) => {
+  getListProduct: async (req, res, next) => {
     try {
-      const { limit } = req.query;
+      const { page, pageSize } = req.query; // 10 - 1
+      const limit = pageSize || 10; // 10
+      const skip = limit * (page - 1) || 0;
 
-      const newList = data.filter((item, index) => {
-        if (index < limit) return item;
-      });
+      const conditionFind = { isDeleted: false };
 
-      return res.send(
-        202,
-        {
-          message: "Lấy danh sách thành công",
-          payload: newList,
-        },
-      );
+      let results = await Product.find(conditionFind)
+        // .populate('category')
+        // .populate('supplier')
+        .skip(skip)
+        .limit(limit)
+        // .sort({ "name": 1, "price": 1, "discount": -1 })
+        // .lean();
+
+      const total = await Product.countDocuments(conditionFind)
+
+      return res.send({ code: 200, total, count: results.length, payload: results });
     } catch (error) {
       console.log('««««« error »»»»»', error);
       return res.send(400, { message: "Không thành công" });
@@ -49,9 +53,9 @@ module.exports = {
   getDetailProduct: (req, res, next) => {
     try {
       const { id } = req.params;
-  
+
       const detail = data.find((item) => item.id.toString() == id);
-  
+
       if (!detail) {
         return res.send(
           404,
@@ -60,7 +64,7 @@ module.exports = {
           },
         );
       }
-  
+
       return res.send(
         202,
         {
@@ -81,7 +85,7 @@ module.exports = {
       const newItem = new Product({ name, price, discount });
 
       const result = await newItem.save();
-  
+
       return res.send(
         202,
         {
@@ -99,7 +103,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const { name, price } = req.body;
-  
+
       const updateData = {
         id: +id,
         name,
@@ -119,13 +123,13 @@ module.exports = {
       }
 
       // const isValidId = false;
-  
+
       data = data.map((item) => {
         if (item.id === +id) {
           // isValidId = true;
           return updateData;
         }
-  
+
         return item;
       })
 
@@ -137,9 +141,9 @@ module.exports = {
       //     },
       //   );
       // }
-  
+
       writeFileSync("data/products.json", data);
-  
+
       return res.send(
         202,
         {
@@ -158,7 +162,7 @@ module.exports = {
       const { id } = req.params;
       const { name, price } = req.body;
       let updateData = {};
-  
+
       data = data.map((item) => {
         if (item.id === +id) {
           updateData = {
@@ -166,15 +170,15 @@ module.exports = {
             name: name || item.name,
             price: price || item.price,
           };
-  
+
           return updateData;
         }
-  
+
         return item;
       });
-  
+
       writeFileSync("data/products.json", data);
-  
+
       if (updateData) {
         return res.send(
           202,
@@ -184,7 +188,7 @@ module.exports = {
           },
         );
       }
-  
+
       return sendErr(res);
     } catch (error) {
       console.log('««««« error »»»»»', error);
@@ -206,11 +210,11 @@ module.exports = {
           },
         );
       }
-  
+
       data = data.filter((item) => item.id !== +id)
-  
+
       writeFileSync("data/products.json", data);
-  
+
       return res.send(
         202,
         {
