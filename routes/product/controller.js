@@ -34,12 +34,12 @@ module.exports = {
       const conditionFind = { isDeleted: false };
 
       let results = await Product.find(conditionFind)
-        // .populate('category')
-        // .populate('supplier')
+        .populate('category')
+        .populate('supplier')
         .skip(skip)
         .limit(limit)
-        // .sort({ "name": 1, "price": 1, "discount": -1 })
-        // .lean();
+        .sort({ "name": 1, "price": 1, "discount": -1 })
+        .lean();
 
       const total = await Product.countDocuments(conditionFind)
 
@@ -50,13 +50,14 @@ module.exports = {
     }
   },
 
-  getDetailProduct: (req, res, next) => {
+  getDetailProduct: async (req, res, next) => {
     try {
       const { id } = req.params;
 
-      const detail = data.find((item) => item.id.toString() == id);
+      const result = await Product.findById(id); // => return object
 
-      if (!detail) {
+
+      if (!result) {
         return res.send(
           404,
           {
@@ -69,7 +70,7 @@ module.exports = {
         202,
         {
           message: "Lấy thông tin thành công",
-          payload: detail,
+          payload: result,
         },
       );
     } catch (error) {
@@ -99,21 +100,19 @@ module.exports = {
     }
   },
 
-  putProduct: (req, res, next) => {
+  putProduct: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { name, price } = req.body;
 
-      const updateData = {
-        id: +id,
-        name,
-        price,
-      };
+      const result = await Product.findByIdAndUpdate(
+        id,
+        req.body,
+        {
+          new: true,
+        },
+      )
 
-      // Kiểm tra ID có tồn tại không?
-      const findObject = data.find(item => item.id === +id)
-
-      if (!findObject) {
+      if (!result) {
         return res.send(
           404,
           {
@@ -122,33 +121,11 @@ module.exports = {
         );
       }
 
-      // const isValidId = false;
-
-      data = data.map((item) => {
-        if (item.id === +id) {
-          // isValidId = true;
-          return updateData;
-        }
-
-        return item;
-      })
-
-      // if(!isValidId) {
-      //   return res.send(
-      //     404,
-      //     {
-      //       message: "Sản phẩm không tồn tại",
-      //     },
-      //   );
-      // }
-
-      writeFileSync("data/products.json", data);
-
       return res.send(
         202,
         {
           message: "Cập nhật sản phẩm thành công",
-          payload: updateData,
+          payload: result,
         },
       );
     } catch (error) {
@@ -157,52 +134,13 @@ module.exports = {
     }
   },
 
-  patchProduct: (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { name, price } = req.body;
-      let updateData = {};
-
-      data = data.map((item) => {
-        if (item.id === +id) {
-          updateData = {
-            ...item,
-            name: name || item.name,
-            price: price || item.price,
-          };
-
-          return updateData;
-        }
-
-        return item;
-      });
-
-      writeFileSync("data/products.json", data);
-
-      if (updateData) {
-        return res.send(
-          202,
-          {
-            message: "Cập nhật sản phẩm thành công",
-            payload: updateData,
-          },
-        );
-      }
-
-      return sendErr(res);
-    } catch (error) {
-      console.log('««««« error »»»»»', error);
-      return sendErr(res);
-    }
-  },
-
-  deleteProduct: (req, res, next) => {
+  deleteProduct: async (req, res, next) => {
     try {
       const { id } = req.params;
 
-      const findObject = data.find(item => item.id === +id)
+      const result = await Product.findByIdAndDelete(id)
 
-      if (!findObject || findObject.isDeleted) {
+      if (!result) {
         return res.send(
           404,
           {
@@ -210,10 +148,6 @@ module.exports = {
           },
         );
       }
-
-      data = data.filter((item) => item.id !== +id)
-
-      writeFileSync("data/products.json", data);
 
       return res.send(
         202,

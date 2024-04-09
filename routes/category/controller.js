@@ -20,21 +20,23 @@ module.exports = {
     }
   },
 
-  getListCategory: (req, res, next) => {
+  getListCategory: async (req, res, next) => {
     try {
-      const { limit } = req.query;
+      const { page, pageSize } = req.query; // 10 - 1
+      const limit = pageSize || 10; // 10
+      const skip = limit * (page - 1) || 0;
 
-      const newList = data.filter((item, index) => {
-        if (index < limit) return item;
-      });
+      const conditionFind = { };
 
-      return res.send(
-        202,
-        {
-          message: "Lấy danh sách thành công",
-          payload: newList,
-        },
-      );
+      let results = await Category.find(conditionFind)
+        .skip(skip)
+        .limit(limit)
+        .sort({ "name": 1 })
+        .lean();
+
+      const total = await Category.countDocuments(conditionFind)
+
+      return res.send({ code: 200, total, count: results.length, payload: results });
     } catch (error) {
       console.log('««««« error »»»»»', error);
       return res.send(400, { message: "Không thành công" });
@@ -47,7 +49,7 @@ module.exports = {
 
       // const result = await  Category.find({ _id: id }); => return arr
       // const result = await  Category.findOne({ _id: id }); => return object
-      const result = await  Category.findById(id); // => return object
+      const result = await Category.findById(id); // => return object
 
       if (!result) {
         return res.send(
@@ -57,7 +59,6 @@ module.exports = {
           },
         );
       }
-  
       return res.send(
         202,
         {
