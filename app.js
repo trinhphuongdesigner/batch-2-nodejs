@@ -38,6 +38,7 @@ app.use(
 );
 
 mongoose.connect(`${CONNECTION_STRING}${DB_NAME}`);
+// mongoose.connect('mongodb://localhost:27017/node-02-database');
 // mongoose.connect('node-33-database');
 
 app.use('/', indexRouter);

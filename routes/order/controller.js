@@ -35,6 +35,7 @@ module.exports = {
   create: async function (req, res, next) {
     try {
       const data = req.body;
+      console.log('««««« 1 »»»»»');
 
       const { customerId, employeeId, productList, paymentType, status, shippedDate, createdDate } = req.body;
 
@@ -58,6 +59,7 @@ module.exports = {
       if (!employee) errors.push('Nhân viên không tồn tại');
 
       let finalProductList = [];
+      console.log('««««« 2 »»»»»');
 
       await asyncForEach(productList, async (item) => {
         const product = await Product.findOne({
@@ -69,17 +71,18 @@ module.exports = {
         if (!product) {
           errors.push(`Sản phẩm ${item.productId} không khả dụng`);
         } else {
-          if (product.stock < item.quantity) errors.push(`Số lượng sản phẩm '${item.productId}' không khả dụng`);
-          // if (product.price !== item.price) errors.push(`Giá của sản phẩm '${item.productId}' không hợp lệ`);
-          // if (product.discount !== item.discount) errors.push(`Giảm giá của sản phẩm '${item.productId}' không hợp lệ`);
+          if (product.stock < item.quantity) {
+            errors.push(`Số lượng sản phẩm '${item.productId}' không khả dụng`);
+          } else {
+            finalProductList.push({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: product.price,
+              discount: product.discount,
+            })
+          }
+          
         }
-
-        finalProductList.push({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: product.price,
-          discount: product.discount,
-        })
 
         // if (product && product.isDeleted) errors.push(`Aản phẩm ${item.productId} đã bị xóa`);
         // if (product && product.stock < item.quantity) errors.push(`Số lượng sản phẩm ${item.productId} không khả dụng`);

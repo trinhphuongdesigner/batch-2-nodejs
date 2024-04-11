@@ -19,3 +19,10 @@ Buổi 6:
   - Bài tập: CRUD với category và product (không cần categoryId và supplierId)
   - Phải có Yup để check validation trước khi xử lý trong controller
   - Có define rule trong models
+
+Buổi 8:
+  - Bài tập: CRUD với tất cả table
+  - Tạo data Mẫu (5-7 record)
+  - Có ít nhất 1 danh mục, nhà cung cấp không có sản phẩm
+  - Có ít nhất 1 khác hàng, nhân viên cấp không có đơn hàng
+  - Có những đơn hàng chỉ mua 1 sản phẩm

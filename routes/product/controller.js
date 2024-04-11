@@ -134,20 +134,25 @@ module.exports = {
       // });
       const getSupplier = Supplier.findOne({
         _id: supplierId,
-        // isDeleted: false,
+        isDeleted: false,
       });
       const getCategory =  Category.findOne({
         _id: categoryId,
-        // isDeleted: false,
+        isDeleted: false,
       });
 
       const [existSupplier, existCategory] = await Promise.all([getSupplier, getCategory]);
+      console.log('««««« existSupplier »»»»»', existSupplier);
 
       const error = [];
       if (!existSupplier) error.push("Nhà cung cấp không khả dụng");
-      if (existSupplier.isDeleted) error.push("Nhà cung cấp đã bị xóa");
-      if (!existCategory) error.push("Danh mục không khả dụng");
-      if (existCategory.isDeleted) error.push("Danh mục đã bị xóa");
+      if (existSupplier?.isDeleted) error.push("Nhà cung cấp đã bị xóa");
+
+      if (!existCategory) {
+        error.push("Danh mục không khả dụng");
+      } else {
+        if (existCategory?.isDeleted) error.push("Danh mục đã bị xóa");
+      }
 
       if (error.length > 0 ) {
         return res.send(400, {

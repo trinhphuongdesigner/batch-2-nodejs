@@ -13,6 +13,10 @@ const productSchema = new Schema(
   },
 );
 
+productSchema.virtual('total').get(function () {
+  return (this.quantity * this.price * (100 - this.discount)) / 100;
+});
+
 // Virtual with Populate
 productSchema.virtual('product', {
   // ref: 'Product',

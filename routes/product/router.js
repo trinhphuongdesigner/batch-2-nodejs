@@ -16,10 +16,6 @@ router.route('/')
 router.route('/fake')
   .post(fake)
 
-router.route('/')
-  .get(getList)
-  .post(validateSchema(validationSchema), create)
-
 router.get('/search', validateSchema(validationQuerySchema), search);
 
 router.route('/:id')
