@@ -26,3 +26,11 @@ Buổi 8:
   - Có ít nhất 1 danh mục, nhà cung cấp không có sản phẩm
   - Có ít nhất 1 khác hàng, nhân viên cấp không có đơn hàng
   - Có những đơn hàng chỉ mua 1 sản phẩm
+
+Buổi 9:
+  - Sử dụng DB chung của anh cung cấp:
+    CONNECTION_STRING: 'mongodb+srv://trinhphuongdev:xjJx9zdpdfLS2JCI@cluster0.xrdmevl.mongodb.net/',
+    DB_NAME: 'node-33-database',
+  - Get Only , No Update, delete, add.
+  - Làm từ cầu 2-13 trong file excel.
+  - Không đọc trước đáp án
