@@ -1,5 +1,5 @@
 
-const { getQueryDateTime } = require('../../utils');
+const { getQueryDateTime, fuzzySearch } = require('../../utils');
 const {
   Product,
   Category,
@@ -216,7 +216,7 @@ module.exports = {
       let results = await Product.find(conditionFind)
         .populate("category")
         .populate("supplier")
-        // .select('disPrice name')
+      // .select('disPrice name')
       // .select('-categoryId -supplierId -description')
       // .lean(); // convert data to object
 
@@ -419,22 +419,22 @@ module.exports = {
           category: "$categories.name",
           supplier: "$suppliers.name",
         })
-        // .project({
-        //   categoryId: 0,
-        //   supplierId: 0,
-        //   description: 0,
-        //   isDeleted: 0,
-        //   suppliers: {
-        //     isDeleted: 0,
-        //     createdAt: 0,
-        //     updatedAt: 0,
-        //   },
-        //   categories: {
-        //     isDeleted: 0,
-        //     createdAt: 0,
-        //     updatedAt: 0,
-        //   },
-        // });
+      // .project({
+      //   categoryId: 0,
+      //   supplierId: 0,
+      //   description: 0,
+      //   isDeleted: 0,
+      //   suppliers: {
+      //     isDeleted: 0,
+      //     createdAt: 0,
+      //     updatedAt: 0,
+      //   },
+      //   categories: {
+      //     isDeleted: 0,
+      //     createdAt: 0,
+      //     updatedAt: 0,
+      //   },
+      // });
 
       let total = await Product.countDocuments();
 
@@ -457,7 +457,7 @@ module.exports = {
       const conditionFind = {
         address: fuzzySearch(address),
       };
-      // const conditionFind = { address: new RegExp(`${address}`) };
+      // const conditionFind = { address: new RegExp(`${address}`, 'gi') };
       // const conditionFind = { address: {$eq: address } };
 
       console.log('««««« conditionFind »»»»»', conditionFind);
@@ -507,10 +507,11 @@ module.exports = {
   question5: async (req, res, next) => {
     try {
       const { year } = req.query;
+      const namSinhTrongDB = { $year: '$birthday' }
 
       const conditionFind = {
         $expr: {
-          $eq: [{ $year: '$birthday' }, year],
+          $eq: [namSinhTrongDB, year],
         },
       };
 
@@ -541,10 +542,13 @@ module.exports = {
       };
 
       let results = await Customer.aggregate()
-        .match(conditionFind)
         .addFields({
           birthYear: { $year: '$birthday' }
-        });
+        })
+        .match({
+          $expr: { $eq: [birthYear, year] }
+        })
+      // .match(conditionFind)
 
       let total = await Customer.countDocuments();
 
@@ -570,6 +574,17 @@ module.exports = {
       } else {
         today = new Date(date);
       }
+
+      // const conditionFind = {
+      //   $and: [
+      //     {
+      //       $expr: { $eq: [{ $dayOfMonth: '$birthday' }, { $dayOfMonth: today }], }
+      //     },
+      //     {
+      //       $expr: { $eq: [{ $month: '$birthday' }, { $month: today }] },
+      //     }
+      //   ],
+      // };
 
       const conditionFind = {
         $expr: {

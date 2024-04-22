@@ -55,4 +55,10 @@ module.exports = {
       await callback(array[index], index, array);
     }
   },
+
+  fuzzySearch: (text) => {
+    const regex = text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+
+    return new RegExp(regex, 'gi');
+  },
 };
