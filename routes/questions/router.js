@@ -1,29 +1,30 @@
 const express = require('express');
 const router = express.Router();
+const { validateSchema, checkIdSchema } = require('../../utils')
 
 const {
   question1,
   question1a,
   question1b,
-  // question2,
-  // question2a,
-  // question2b,
-  // question3,
-  // question3a,
-  // question3c,
-  // question3d,
-  // question3e,
-  // question4,
-  // question4a,
-  // question5,
-  // question5a,
-  // question6,
-  // question7,
-  // question7a,
-  // question8a,
-  // question8b,
-  // question8c,
-  // question13,
+  question2,
+  question2a,
+  question2b,
+  question3,
+  question3a,
+  question3c,
+  question3d,
+  question3e,
+  question4,
+  question4a,
+  question5,
+  question5a,
+  question6,
+  question7,
+  question7a,
+  question8a,
+  question8b,
+  question8c,
+  question13,
   // question15,
   // question18,
   // question19,
@@ -40,29 +41,30 @@ const {
   // question30,
   // question34,
 } = require('./controller');
+const { q1 } = require('./validations');
 
 router.get('/1', question1);
 router.get('/1a', question1a);
-router.get('/1b', question1b);
-// router.get('/2', question2);
-// router.get('/2a', question2a);
-// router.get('/2b', question2b);
-// router.get('/3', question3);
-// router.get('/3a', question3a);
-// router.get('/3c', question3c);
-// router.get('/3d', question3d);
-// router.get('/3e', question3e);
-// router.get('/4', question4);
-// router.get('/4a', question4a);
-// router.get('/5', question5);
-// router.get('/5a', question5a);
-// router.get('/6', question6);
-// router.get('/7', question7);
-// router.get('/7a', question7a);
-// router.get('/8a', question8a);
-// router.get('/8b', question8b);
-// router.get('/8c', question8c);
-// router.get('/13', question13);
+router.get('/1b', validateSchema(q1), question1b);
+router.get('/2', question2);
+router.get('/2a', question2a);
+router.get('/2b', question2b);
+router.get('/3', question3);
+router.get('/3a', question3a);
+router.get('/3c', question3c);
+router.get('/3d', question3d);
+router.get('/3e', question3e);
+router.get('/4', question4);
+router.get('/4a', question4a);
+router.get('/5', question5);
+router.get('/5a', question5a);
+router.get('/6', question6);
+router.get('/7', question7);
+router.get('/7a', question7a);
+router.get('/8a', question8a);
+router.get('/8b', question8b);
+router.get('/8c', question8c);
+router.get('/13', question13);
 // router.get('/15', question15);
 // router.get('/18', question18);
 // router.get('/19', question19);
