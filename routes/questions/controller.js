@@ -57,7 +57,7 @@ module.exports = {
 
       if (discount) {
         switch (+type) {
-        // switch (Number(type)) {
+          // switch (Number(type)) {
           // case 0:
           //   conditionFind.discount = { $eq: discount };
           //   break;
@@ -190,19 +190,23 @@ module.exports = {
     }
   },
 
+  // Hiển thị tất cả các mặt hàng có Giá bán sau khi đã tính giảm giá <= 1000
   question3: async (req, res, next) => {
     try {
-      const { discountedPrice } = req.query;
       // let discountedPrice = (price * (100 - discount)) / 100;'
       // const s = { $subtract: [100, '$discount'] }; // (100 - 10) s => 90
       // const m = { $multiply: ['$price', s] }; // price * 90
       // const d = { $divide: [m, 100] }; // price * 90 / 100
       // d = discountedPrice;
 
-      // (price / 100) x (100- discount)
-      const discounted = { $multiply: [{ $divide: ['$price', 100]} , { $subtract: [100, '$discount']}] }
+      // gia sau khi giam = (price / 100) x (100 - discount)
+      const discounted = { $multiply: [{ $divide: ['$price', 100] }, { $subtract: [100, '$discount'] }] }
 
-      const conditionFind = { $expr: { $lte: [discounted, +discountedPrice] } };
+      // gias sau khi giam | gia do nguoi dung truyen len de so sanh
+      // price: { $lte: 1000 } = { $lte: ['$price', 1000]} // So sánh price với discountedPrice sao cho price <= discountedPrice
+
+
+      const conditionFind = { $expr: { $lte: [discounted, 1000] } };
       // const conditionFind = { discounted: { $lte: +discountedPrice} }; SAI
       console.log('««««« conditionFind »»»»»', conditionFind);
 
@@ -212,8 +216,9 @@ module.exports = {
       let results = await Product.find(conditionFind)
         .populate("category")
         .populate("supplier")
-        // .select('-categoryId -supplierId -description')
-        // .lean(); // convert data to object
+        // .select('disPrice name')
+      // .select('-categoryId -supplierId -description')
+      // .lean(); // convert data to object
 
       // const newResults = results.map((item) => {
       //   const dis = item.price * (100 - item.discount) / 100;
@@ -238,6 +243,7 @@ module.exports = {
     }
   },
 
+  // Hiển thị tất cả các mặt hàng có Giá bán sau khi đã tính giảm giá <= X
   question3a: async (req, res, next) => {
     try {
       const s = { $subtract: [100, '$discount'] }; // (100 - 10) s => 90
@@ -269,20 +275,25 @@ module.exports = {
     }
   },
 
+  // Hiển thị tất cả các mặt hàng có Giá bán sau khi đã tính giảm giá <= 1000, Sử dụng aggregate
   question3c: async (req, res, next) => {
     try {
       const s = { $subtract: [100, '$discount'] }; // (100 - 10) s => 90
       const m = { $multiply: ['$price', s] }; // price * 90
-      const d = { $divide: [m, 100] }; // price * 90 / 100
+      const d = { $divide: [m, 100] }; // price * 90 / 100 => Giá sau khi tính giảm giá
+
+      // let results = await Product.find({
+      //   $expr: { $lte: [d, 100]}
+      // })
 
       // let results = await Product.aggregate([
       //   {
-      //     $match: { $expr: { $lte: [d, 20000] } },
+      //     $match: { $expr: { $lte: [d, 100] } },
       //   },
       // ]);
 
       let results = await Product.aggregate()
-        .match({ $expr: { $lte: [d, 100] } });
+        .match({ $expr: { $lte: [d, 1000] } });
 
       let total = await Product.countDocuments();
 
@@ -297,6 +308,7 @@ module.exports = {
     }
   },
 
+  // Hiển thị tất cả các mặt hàng có Giá bán sau khi đã tính giảm giá <= 1000, Sử dụng aggregate và thêm trường mới và lựa chọn field dữ liệu trả về
   question3d: async (req, res, next) => {
     try {
       const s = { $subtract: [100, '$discount'] }; // (100 - 10) s => 90
@@ -355,6 +367,7 @@ module.exports = {
     }
   },
 
+  // Hiển thị tất cả các mặt hàng có Giá bán sau khi đã tính giảm giá <= 1000, Sử dụng aggregate và thêm trường mới và lựa chọn field dữ liệu trả về và thông tin danh mục, nhà cung cấp
   question3e: async (req, res, next) => {
     try {
       const s = { $subtract: [100, '$discount'] }; // (100 - 10) s => 90
@@ -393,21 +406,35 @@ module.exports = {
         })
         .unwind('suppliers')
         .project({
-          categoryId: 0,
-          supplierId: 0,
-          description: 0,
-          isDeleted: 0,
-          suppliers: {
-            isDeleted: 0,
-            createdAt: 0,
-            updatedAt: 0,
-          },
+          disPrice: 1,
           categories: {
-            isDeleted: 0,
-            createdAt: 0,
-            updatedAt: 0,
+            name: 1
           },
-        });
+          suppliers: {
+            name: 1
+          },
+        })
+        .project({
+          disPrice: 1,
+          category: "$categories.name",
+          supplier: "$suppliers.name",
+        })
+        // .project({
+        //   categoryId: 0,
+        //   supplierId: 0,
+        //   description: 0,
+        //   isDeleted: 0,
+        //   suppliers: {
+        //     isDeleted: 0,
+        //     createdAt: 0,
+        //     updatedAt: 0,
+        //   },
+        //   categories: {
+        //     isDeleted: 0,
+        //     createdAt: 0,
+        //     updatedAt: 0,
+        //   },
+        // });
 
       let total = await Product.countDocuments();
 
