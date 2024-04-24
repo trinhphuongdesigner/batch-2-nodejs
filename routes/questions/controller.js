@@ -634,8 +634,9 @@ module.exports = {
         .populate({ path: 'customer', select: 'firstName lastName' }) // select để chọn lọc dữ liệu trả về
         // .populate('customer')
         .populate('employee')
+        // .populate('productList.product') ~
         .populate({
-          path: 'productList.product',
+          path: 'productList.product', // virtual name
           select: { name: 1, stock: 1 },
         })
         .lean();
@@ -664,9 +665,9 @@ module.exports = {
           from: 'customers',
           localField: 'customerId',
           foreignField: '_id',
-          as: 'Customer',
+          as: 'customer',
         })
-        .unwind('Customer')
+        .unwind('customer')
         .lookup({
           from: 'employees',
           localField: 'employeeId',
@@ -674,30 +675,25 @@ module.exports = {
           as: 'employee',
         })
         .unwind('employee')
+        .lookup({
+          from: 'products',
+          localField: 'productList.productId',
+          foreignField: '_id',
+          as: 'products',
+        })
         .project({
-          customerId: 0,
-          employeeId: 0,
-          // shippedDate: 0,
-          // paymentType: 0,
-          // status: 0,
-          // orderDetails: 0,
-          // createdDate: 0,
-        });
-      // .lookup({
-      //   from: 'products',
-      //   localField: 'orderDetails.productId',
-      //   foreignField: '_id',
-      //   as: 'productList.product',
-      // })
-      // .unwind('product')
-      // .populate({ path: 'customer', select: 'firstName lastName' })
-      // .populate('employee')
-      // .populate({
-      //   path: 'productList.product',
-      //   select: { name: 1 , stock: 1},
-      // })
-      // .select('-customerId -employeeId -orderDetails.productId')
-      // .lean();
+          products: {
+            name: 1,
+          },
+          customer: {
+            firstName: 1,
+            lastName: 1,
+          },
+          employee: {
+            firstName: 1,
+            lastName: 1,
+          },
+        })
 
       let total = await Order.countDocuments();
 
@@ -723,9 +719,7 @@ module.exports = {
           $and: [
             // { $eq: ['$status', status] },
             { status },
-            {
-              $eq: [{ $dayOfMonth: '$shippedDate' }, { $dayOfMonth: findDate }],
-            },
+            { $eq: [{ $dayOfMonth: '$shippedDate' }, { $dayOfMonth: findDate }] },
             { $eq: [{ $month: '$shippedDate' }, { $month: findDate }] },
             { $eq: [{ $year: '$shippedDate' }, { $year: findDate }] },
           ],
@@ -733,6 +727,45 @@ module.exports = {
       };
 
       let results = await Order.find(conditionFind).lean();
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  question8b: async (req, res, next) => {
+    try {
+      let { status, fromDate, toDate } = req.query;
+
+      fromDate = new Date(fromDate);
+      fromDate.setHours(0, 0, 0, 0);
+
+      const tmpToDate = new Date(toDate);
+      tmpToDate.setHours(0, 0, 0, 0);
+      toDate = new Date(tmpToDate.setDate(tmpToDate.getDate() + 1));
+
+      const compareStatus = { $eq: ['$status', status] };
+      const compareFromDate = { $gte: ['$createdAt', fromDate] };
+      const compareToDate = { $lt: ['$createdAt', toDate] };
+
+      const conditionFind = {
+        $expr: { $and: [compareStatus, compareFromDate, compareToDate] },
+      };
+
+      let results = await Order.find(conditionFind)
+        .populate('productList.product')
+        .populate('customer')
+        .populate('employee')
+        .lean();
 
       let total = await Order.countDocuments();
 
@@ -796,7 +829,7 @@ module.exports = {
     }
   },
 
-  question8b: async (req, res, next) => {
+  question8d: async (req, res, next) => {
     try {
       let { status, fromDate, toDate } = req.query;
 
@@ -809,10 +842,17 @@ module.exports = {
 
       const compareStatus = { $eq: ['$status', status] };
       const compareFromDate = { $gte: ['$shippedDate', fromDate] };
-      const compareToDate = { $lt: ['$shippedDate', toDate] };
+      const compareToDate = { $lte: ['$shippedDate', toDate] };
+      // const compareFromDate = { $lt: ['$shippedDate', fromDate] };
+      // const compareToDate = { $gt: ['$shippedDate', toDate] };
 
       const conditionFind = {
-        $expr: { $and: [compareStatus, compareFromDate, compareToDate] },
+        $expr: {
+          $and: [
+            compareStatus,
+            { $not: { $and: [compareFromDate, compareToDate] } }
+          ]
+        },
       };
 
       let results = await Order.find(conditionFind)

@@ -24,6 +24,7 @@ const {
   question8a,
   question8b,
   question8c,
+  question8d,
   question13,
   // question15,
   // question18,
@@ -64,6 +65,7 @@ router.get('/7a', question7a);
 router.get('/8a', question8a);
 router.get('/8b', question8b);
 router.get('/8c', question8c);
+router.get('/8d', question8d);
 router.get('/13', question13);
 // router.get('/15', question15);
 // router.get('/18', question18);
