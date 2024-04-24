@@ -25,23 +25,33 @@ const {
   question8b,
   question8c,
   question8d,
+} = require('./controller1');
+
+const {
   question13,
-  // question15,
-  // question18,
-  // question19,
-  // question20,
-  // question21,
-  // question22,
-  // question23,
-  // question24,
-  // question25,
-  // question26,
-  // question26b,
-  // question26c,
-  // question27,
-  // question30,
-  // question34,
-} = require('./controller');
+  question15,
+  question16a,
+  question16b,
+  question18,
+  question19,
+  question20,
+  question21,
+  question22,
+  question23,
+  question24,
+  question25,
+} = require('./controller2');
+
+const {
+  question26,
+  question26b,
+  question26c,
+  question27,
+  question29,
+  question30,
+  question34,
+} = require('./controller3');
+
 const { q1 } = require('./validations');
 
 router.get('/1', question1);
@@ -67,11 +77,11 @@ router.get('/8b', question8b);
 router.get('/8c', question8c);
 router.get('/8d', question8d);
 router.get('/13', question13);
-// router.get('/15', question15);
-// router.get('/18', question18);
-// router.get('/19', question19);
-// router.get('/20', question20);
-// router.get('/21', question21);
+router.get('/15', question15);
+router.get('/18', question18);
+router.get('/19', question19);
+router.get('/20', question20);
+router.get('/21', question21);
 // router.get('/22', question22);
 // router.get('/23', question23);
 // router.get('/24', question24);

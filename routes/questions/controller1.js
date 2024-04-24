@@ -874,42 +874,4 @@ module.exports = {
       return res.status(500).json({ code: 500, error: err });
     }
   },
-
-  question13: async (req, res, next) => {
-    try {
-      let { address } = req.query;
-
-      let results = await Order.aggregate()
-        .lookup({
-          from: 'customers',
-          localField: 'customerId',
-          foreignField: '_id',
-          as: 'customer',
-        })
-        .unwind('customer')
-        .match({
-          'customer.address': {
-            $regex: new RegExp(`${address}`),
-            $options: 'i',
-          },
-        })
-        .project({
-          customerId: 0,
-          employeeId: 0,
-        });
-
-      let total = await Order.countDocuments();
-
-      return res.send({
-        code: 200,
-        total,
-        totalResult: results.length,
-        payload: results,
-      });
-    } catch (err) {
-      console.log('««««« err »»»»»', err);
-      return res.status(500).json({ code: 500, error: err });
-    }
-  },
-
 };
