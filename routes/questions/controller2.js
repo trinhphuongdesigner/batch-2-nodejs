@@ -216,15 +216,14 @@ module.exports = {
           totalProduct: {
             $sum: '$products.stock',
           },
-          // count: {$cond: { if: {$gt: ['$products', 0]}, then: 1, else: 0} }
-          // count: {
-          //   $sum: {$cond: { if: {
-          //     $and : [
-          //       {$lt: ['$products.stock', 100]},
-          //       {$gt: ['$products.stock', 0]},
-          //     ]
-          //   }, then: 1, else: 0} },
-          // },
+          count: {
+            $sum: {$cond: { if: {
+              $and : [
+                // {$lt: ['$products.stock', 100]},
+                {$gt: ['$products.stock', 0]},
+              ]
+            }, then: 1, else: 0} },
+          },
         })
         .sort({
           totalProduct: -1,
@@ -251,14 +250,17 @@ module.exports = {
       const conditionFind = getQueryDateTime(fromDate, toDate);
 
       let results = await Order.aggregate()
-        .match({
-          ...conditionFind,
-          status: { $in: ['WAITING'] },
-        })
+        // .match({
+        //   ...conditionFind,
+        //   // status: { $in: ['COMPLETED'] },
+        // })
+        .match(conditionFind)
         .unwind('productList')
         .group({
           _id: '$productList.productId',
           quantity: { $sum: '$productList.quantity' },
+          count: { $sum: 1 },
+          // max: ???
         })
         .lookup({
           from: 'products',
@@ -297,7 +299,7 @@ module.exports = {
       let results = await Order.aggregate()
         .match({
           ...conditionFind,
-          status: { $in: ['WAITING'] },
+          // status: { $in: ['WAITING'] },
         })
         .unwind('productList')
         .lookup({
