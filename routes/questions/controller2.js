@@ -514,6 +514,10 @@ module.exports = {
           email: { $first: '$email'},
           total: { $sum: '$total' },
         })
+        .sort({
+          total: -1,
+          name: 1
+        })
         // .project({
         //   totalPrice: '$total',
         //   firstName: '$employee.firstName',

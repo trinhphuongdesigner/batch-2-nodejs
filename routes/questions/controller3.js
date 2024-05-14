@@ -13,6 +13,7 @@ module.exports = {
   question26: async (req, res, next) => {
     try {
       let { fromDate, toDate } = req.query;
+      // const conditionFind = getQueryDateTime(fromDate, toDate);
       fromDate = new Date(fromDate);
 
       const tmpToDate = new Date(toDate);
