@@ -90,6 +90,7 @@ router.get('/26', question26);
 router.get('/26b', question26b);
 router.get('/26c', question26c);
 router.get('/27', question27);
+router.get('/29', question29);
 router.get('/30', question30);
 router.get('/34', question34);
 
