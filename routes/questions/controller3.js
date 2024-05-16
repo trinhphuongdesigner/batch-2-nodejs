@@ -23,56 +23,56 @@ module.exports = {
         .lookup({
           from: 'orders',
           localField: '_id',
-          foreignField: 'orderDetails.productId',
+          foreignField: 'productList.productId',
           as: 'orders',
         })
-      // .unwind({
-      //   path: '$orders',
-      //   preserveNullAndEmptyArrays: true,
-      // })
-      // .match({
-      //   $or: [
-      //     {
-      //       $and: [
-      //         { orders: { $ne: null } },
-      //         {
-      //           $or: [
-      //             { 'orders.createdDate': { $lte: fromDate } },
-      //             { 'orders.createdDate': { $gte: toDate } },
-      //           ],
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       orders: null,
-      //     },
-      //   ],
-      // })
-      // .lookup({
-      //   from: 'suppliers',
-      //   localField: 'supplierId',
-      //   foreignField: '_id',
-      //   as: 'suppliers',
-      // })
-      // .project({
-      //   _id: 0,
-      //   suppliers: 1,
-      // })
-      // .unwind('suppliers')
-      // .project({
-      //   _id: '$suppliers._id',
-      //   name: '$suppliers.name',
-      //   email: '$suppliers.email',
-      //   phoneNumber: '$suppliers.phoneNumber',
-      //   address: '$suppliers.address',
-      // })
-      // .group({
-      //   _id: '$_id',
-      //   name: { $first: '$name' },
-      //   phoneNumber: { $first: '$phoneNumber' },
-      //   email: { $first: '$email' },
-      //   address: { $first: '$address' },
-      // })
+        .unwind({
+          path: '$orders',
+          preserveNullAndEmptyArrays: true,
+        })
+        .match({
+          $or: [
+            {
+              $and: [
+                { orders: { $ne: null } },
+                {
+                  $or: [
+                    { 'orders.createdDate': { $lte: fromDate } },
+                    { 'orders.createdDate': { $gte: toDate } },
+                  ],
+                },
+              ],
+            },
+            {
+              orders: null,
+            },
+          ],
+        })
+        .lookup({
+          from: 'suppliers',
+          localField: 'supplierId',
+          foreignField: '_id',
+          as: 'suppliers',
+        })
+        .project({
+          _id: 0,
+          suppliers: 1,
+        })
+        .unwind('suppliers')
+        .project({
+          _id: '$suppliers._id',
+          name: '$suppliers.name',
+          email: '$suppliers.email',
+          phoneNumber: '$suppliers.phoneNumber',
+          address: '$suppliers.address',
+        })
+        .group({
+          _id: '$_id',
+          name: { $first: '$name' },
+          phoneNumber: { $first: '$phoneNumber' },
+          email: { $first: '$email' },
+          address: { $first: '$address' },
+        })
 
       let total = await Product.countDocuments();
 
@@ -162,9 +162,19 @@ module.exports = {
     try {
       let results = await Product.aggregate()
         .lookup({
+          from: 'products',
+          localField: '_id',
+          foreignField: 'supplierId',
+          as: 'products',
+        })
+        .unwind({
+          path: '$products',
+          preserveNullAndEmptyArrays: true,
+        })
+        .lookup({
           from: 'orders',
           localField: '_id',
-          foreignField: 'orderDetails.productId',
+          foreignField: 'productList.productId',
           as: 'orders',
         })
         .unwind({
@@ -330,36 +340,36 @@ module.exports = {
             ],
           },
         })
-      // .group({
-      //   _id: "$orders.productList._id", 
-      //   price: { $first: "$price" },
-      // })
-      // .group({
-      //   _id: null,
-      //   total: { $sum: "$price" }
-      // })
-      .project({
-        products: 0,
-        createdAt: 0,
-        updatedAt: 0,
-        isDeleted: 0,
-        orders: {
+        // .group({
+        //   _id: "$orders.productList._id", 
+        //   price: { $first: "$price" },
+        // })
+        // .group({
+        //   _id: null,
+        //   total: { $sum: "$price" }
+        // })
+        .project({
+          products: 0,
           createdAt: 0,
           updatedAt: 0,
-          createdDate: 0,
-          shippedDate: 0,
-          paymentType: 0,
-          status: 0,
-          customerId: 0,
-          employeeId: 0,
-        },
-        orderId: "$orders._id",
-      // productDetailId: "$orders.productList._id",
-      // productId: "$orders.productList.productId",
-      // quantity: "$orders.productList.quantity",
-      // discount: "$orders.productList.discount",
-      // price: "$orders.productList.price",
-      })
+          isDeleted: 0,
+          orders: {
+            createdAt: 0,
+            updatedAt: 0,
+            createdDate: 0,
+            shippedDate: 0,
+            paymentType: 0,
+            status: 0,
+            customerId: 0,
+            employeeId: 0,
+          },
+          orderId: "$orders._id",
+          // productDetailId: "$orders.productList._id",
+          // productId: "$orders.productList.productId",
+          // quantity: "$orders.productList.quantity",
+          // discount: "$orders.productList.discount",
+          // price: "$orders.productList.price",
+        })
       // .unwind({
       //   path: '$orders.productList',
       //   preserveNullAndEmptyArrays: true,
