@@ -49,7 +49,10 @@ const {
   question27,
   question29,
   question30,
+  question32,
+  question33,
   question34,
+  question35,
 } = require('./controller3');
 
 const { q1 } = require('./validations');
@@ -92,6 +95,9 @@ router.get('/26c', question26c);
 router.get('/27', question27);
 router.get('/29', question29);
 router.get('/30', question30);
+router.get('/32', question32);
+router.get('/33', question33);
 router.get('/34', question34);
+router.get('/35', question35);
 
 module.exports = router;

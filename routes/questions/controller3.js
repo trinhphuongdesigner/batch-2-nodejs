@@ -434,7 +434,7 @@ module.exports = {
   //     //   preserveNullAndEmptyArrays: true,
   //     // })
   //     // .addFields({
-  //     //   originalPrice: {
+  //     //   discountedPrice: {
   //     //     $divide: [
   //     //       {
   //     //         $multiply: [
@@ -580,21 +580,21 @@ module.exports = {
     }
   },
 
-  question33: async (req, res, next) => {
+  question32: async (req, res, next) => {
     try {
       let { fromDate, toDate } = req.query;
       const conditionFind = getQueryDateTime(fromDate, toDate);
 
       let results = await Order.aggregate()
-        .match(conditionFind)
-        .unwind('orderDetails')
+        .match(conditionFind) // Lọc theo ngày tháng
+        .unwind('productList')
         .addFields({
-          originalPrice: {
+          discountedPrice: {
             $divide: [
               {
                 $multiply: [
-                  '$orderDetails.price',
-                  { $subtract: [100, '$orderDetails.discount'] },
+                  '$productList.price',
+                  { $subtract: [100, '$productList.discount'] },
                 ],
               },
               100,
@@ -602,14 +602,121 @@ module.exports = {
           },
         })
         .group({
-          _id: '$orderDetails._id',
+          _id: '$_id',
+          createdDate: { $first: '$createdDate' },
+          shippedDate: { $first: '$shippedDate' },
+          paymentType: { $last: '$paymentType' },
+          customerId: { $first: '$customerId' },
+          employeeId: { $first: '$employeeId' },
+          status: { $first: '$status' },
+          total: {
+            $sum: { $multiply: ['$discountedPrice', '$productList.quantity'] },
+          },
+        })
+        .sort({
+          total: -1
+        })
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  question33: async (req, res, next) => {
+    try {
+      let { fromDate, toDate } = req.query;
+      const conditionFind = getQueryDateTime(fromDate, toDate);
+
+      let results = await Order.aggregate()
+        .match(conditionFind)
+        .unwind('productList')
+        .addFields({
+          discountedPrice: {
+            $divide: [
+              {
+                $multiply: [
+                  '$productList.price',
+                  { $subtract: [100, '$productList.discount'] },
+                ],
+              },
+              100,
+            ],
+          },
+        })
+        .group({
+          _id: '$_id',
           createdDate: { $first: '$createdDate' },
           shippedDate: { $first: '$shippedDate' },
           status: { $first: '$status' },
           shippingAddress: { $first: '$shippingAddress' },
           description: { $first: '$description' },
           total: {
-            $sum: { $multiply: ['$originalPrice', '$orderDetails.quantity'] },
+            $sum: { $multiply: ['$discountedPrice', '$productList.quantity'] },
+          },
+        })
+        .group({
+          _id: '$total',
+          orders: { $push: '$$ROOT' },
+        })
+        .sort({
+          _id: 1
+        })
+        .skip(0)
+        .limit(1)
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  question34: async (req, res, next) => {
+    try {
+      let { fromDate, toDate } = req.query;
+      const conditionFind = getQueryDateTime(fromDate, toDate);
+
+      let results = await Order.aggregate()
+        .match(conditionFind)
+        .unwind('productList')
+        .addFields({
+          discountedPrice: {
+            $divide: [
+              {
+                $multiply: [
+                  '$productList.price',
+                  { $subtract: [100, '$productList.discount'] },
+                ],
+              },
+              100,
+            ],
+          },
+        })
+        .group({
+          _id: '$_id',
+          createdDate: { $first: '$createdDate' },
+          shippedDate: { $first: '$shippedDate' },
+          status: { $first: '$status' },
+          shippingAddress: { $first: '$shippingAddress' },
+          description: { $first: '$description' },
+          total: {
+            $sum: { $multiply: ['$discountedPrice', '$productList.quantity'] },
           },
         })
         .group({
@@ -635,52 +742,52 @@ module.exports = {
     }
   },
 
-  question34: async (req, res, next) => {
+  question35: async (req, res, next) => {
     try {
       let { fromDate, toDate } = req.query;
-      const conditionFind = getQueryDateTime(fromDate, toDate);
+      fromDate = new Date(fromDate);
 
-      let results = await Order.aggregate()
-        .match(conditionFind)
-        .unwind('orderDetails')
-        .addFields({
-          originalPrice: {
-            $divide: [
-              {
-                $multiply: [
-                  '$orderDetails.price',
-                  { $subtract: [100, '$orderDetails.discount'] },
-                ],
-              },
-              100,
-            ],
-          },
+      const tmpToDate = new Date(toDate);
+      toDate = new Date(tmpToDate.setDate(tmpToDate.getDate() + 1));
+
+      let results = await Customer.aggregate()
+        .lookup({
+          from: 'orders',
+          localField: '_id',
+          foreignField: 'customerId',
+          as: 'orders',
         })
-        .group({
-          _id: '$_id',
-          createdDate: { $first: '$createdDate' },
-          shippedDate: { $first: '$shippedDate' },
-          status: { $first: '$status' },
-          shippingAddress: { $first: '$shippingAddress' },
-          description: { $first: '$description' },
-          total: {
-            $sum: { $multiply: ['$originalPrice', '$orderDetails.quantity'] },
-          },
-        })
-        .group({
-          _id: null,
-          avg: { $avg: '$total' },
-          total: { $sum: '$total' },
-          count: { $sum: 1 },
+        .unwind({
+          path: '$orders',
+          preserveNullAndEmptyArrays: true,
         })
         .project({
-          _id: 0,
-          avg: 1,
-          total: 1,
-          count: 1,
+          firstName: 1,
+          lastName: 1,
+          phoneNumber: 1,
+          address: 1,
+          email: 1,
+          birthday: 1,
+          orderCreatedDate: '$orders.createdDate',
+        })
+        .match({
+          $or: [
+            { orderCreatedDate: null },
+            {
+              $and: [
+                { orderCreatedDate: { $ne: null } },
+                {
+                  $or: [
+                    { orderCreatedDate: { $lt: fromDate } },
+                    { orderCreatedDate: { $gt: toDate } },
+                  ],
+                },
+              ],
+            }
+          ],
         })
 
-      let total = await Order.countDocuments();
+      let total = await Customer.countDocuments();
 
       return res.send({
         code: 200,
