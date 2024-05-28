@@ -29,7 +29,7 @@ async function create(req, res, next) {
 
     res.send(200, {
       payload,
-      message: "Tạo thành công"
+      message: "Tạo thành công nè"
     });
   } catch (error) {
     console.log('««««« error »»»»»', error);

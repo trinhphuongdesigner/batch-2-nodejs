@@ -13,15 +13,15 @@ const {
 const { employeeSchema, employeePatchSchema } = require('./validation');
 
 router.route('/')
-  .get(getAll)
+  // .get(getAll)
   .post(validateSchema(employeeSchema), create);
 
-router.get('/search', search);
+// router.get('/search', search);
 
-router.route('/:id')
-  .get(validateSchema(checkIdSchema), getDetail)
-  .put(validateSchema(checkIdSchema), validateSchema(employeeSchema), update)
-  .patch(validateSchema(checkIdSchema), validateSchema(employeePatchSchema), update)
-  .delete(validateSchema(checkIdSchema), deleteFunc);
+// router.route('/:id')
+//   .get(validateSchema(checkIdSchema), getDetail)
+//   .put(validateSchema(checkIdSchema), validateSchema(employeeSchema), update)
+//   .patch(validateSchema(checkIdSchema), validateSchema(employeePatchSchema), update)
+//   .delete(validateSchema(checkIdSchema), deleteFunc);
 
 module.exports = router;
