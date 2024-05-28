@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors = require('cors');
 const { default: mongoose } = require('mongoose');
+const passport = require('passport');
 require('dotenv').config();
 
 var indexRouter = require('./routes/index');
@@ -18,6 +19,12 @@ const ordersRouter = require('./routes/order/router');
 const questionsRouter = require('./routes/questions/router');
 
 const { CONNECTION_STRING, DB_NAME } = require('./constants/db');
+
+const {
+  passportVerifyToken, // USING
+  passportVerifyAccount,
+  passportConfigBasic,
+} = require('./middlewares/passport');
 
 var app = express();
 
@@ -41,10 +48,14 @@ mongoose.connect(`${CONNECTION_STRING}${DB_NAME}`);
 // mongoose.connect('mongodb://localhost:27017/node-02-database');
 // mongoose.connect('node-33-database');
 
+passport.use(passportVerifyToken);
+passport.use(passportVerifyAccount);
+passport.use(passportConfigBasic);
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/products', productsRouter);
-app.use('/categories', categoriesRouter);
+app.use('/products', passport.authenticate('jwt', { session: false }), productsRouter);
+app.use('/categories', passport.authenticate('jwt', { session: false }), categoriesRouter);
 app.use('/suppliers', suppliersRouter); 
 app.use('/customers', customersRouter);
 app.use('/employees', employeesRouter);
