@@ -1,16 +1,20 @@
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
+
 const LocalStrategy = require('passport-local').Strategy;
+
+
 const BasicStrategy = require('passport-http').BasicStrategy;
 
 const jwtSettings = require('../constants/jwtSetting');
-const { Customer } = require('../models');
+const { Employee } = require('../models');
 
+// new JwtStrategy({}, func) // Xác thực token
 const passportVerifyToken = new JwtStrategy(
   {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken('Authorization'),
-    secretOrKey: jwtSettings.SECRET,
-    // secretOrKey: "ADB57C459465E3ED43C6C6231E3C9",
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken('Authorization'), // Vị trí kiểm tra token
+    secretOrKey: jwtSettings.SECRET, // Chuỗi khóa bí mật để mã hóa
+    // secretOrKey: "$2a$10$UGya/ViKIX9aJ5aN0NARhe2yl5bYtjZ4N5l.lVM9VW4dL8NgtcTeq",
   },
   async (payload, done) => {
     try {
@@ -31,7 +35,7 @@ const passportVerifyToken = new JwtStrategy(
 const passportVerifyAccount = new LocalStrategy({ usernameField: 'email' },
   async (email, password, done) => {
     try {
-      const user = await Customer.findOne({
+      const user = await Employee.findOne({
         isDeleted: false,
         email,
       });

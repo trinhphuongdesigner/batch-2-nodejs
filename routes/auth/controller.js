@@ -17,6 +17,7 @@ module.exports = {
         birthday,
         updatedAt,
       } = req.user
+
       const token = generateToken({
           _id,
           firstName,
@@ -27,11 +28,11 @@ module.exports = {
           birthday,
           updatedAt,
         });
-      const refreshToken = generateRefreshToken(_id);
+      // const refreshToken = generateRefreshToken(_id);
 
       return res.status(200).json({
         token,
-        refreshToken,
+        // refreshToken,
       });
     } catch (err) {
       console.log('««««« err »»»»»', err);

@@ -9,13 +9,14 @@ const generateToken = (user) => {
   return JWT.sign(
     {
       iat: Math.floor(Date.now() / 1000),
-      ...user,
+      ...user
+      // _id: user._id,
       // email: user.email,
       // name: user.firstName,
       // algorithm,
     },
     jwtSettings.SECRET,
-    // "ADB57C459465E3ED43C6C6231E3C9",
+    // "$2a$10$UGya/ViKIX9aJ5aN0NARhe2yl5bYtjZ4N5l.lVM9VW4dL8NgtcTeq",
     {
       expiresIn,
     },

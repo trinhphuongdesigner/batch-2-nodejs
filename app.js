@@ -17,6 +17,7 @@ const customersRouter = require('./routes/customer/router');
 const employeesRouter = require('./routes/employee/router');
 const ordersRouter = require('./routes/order/router');
 const questionsRouter = require('./routes/questions/router');
+const authRouter = require('./routes/auth/router');
 
 const { CONNECTION_STRING, DB_NAME } = require('./constants/db');
 
@@ -54,6 +55,9 @@ passport.use(passportConfigBasic);
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+
+
+app.use('/auth', authRouter);
 app.use('/products', passport.authenticate('jwt', { session: false }), productsRouter);
 app.use('/categories', passport.authenticate('jwt', { session: false }), categoriesRouter);
 app.use('/suppliers', suppliersRouter); 

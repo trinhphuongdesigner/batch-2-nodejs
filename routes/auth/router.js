@@ -15,9 +15,8 @@ const {
 
 router.route('/login')
   .post(
-    validateSchema(loginSchema),
-    // checkAccount
-    passport.authenticate('local', { session: false }),
+    validateSchema(loginSchema), // Kiểm tra cơ bản
+    passport.authenticate('local', { session: false }), // passportVerifyAccount => Kiểm tra tk và mk hợp lệ
     login,
   );
 
