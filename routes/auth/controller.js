@@ -1,7 +1,7 @@
 const JWT = require('jsonwebtoken');
 
 const { generateToken, generateRefreshToken } = require('../../utils/jwtHelper');
-const { Customer } = require('../../models');
+const { Customer, Employee, Order } = require('../../models');
 const jwtSettings = require('../../constants/jwtSetting');
 
 module.exports = {
@@ -28,11 +28,11 @@ module.exports = {
           birthday,
           updatedAt,
         });
-      // const refreshToken = generateRefreshToken(_id);
+      const refreshToken = generateRefreshToken(_id);
 
       return res.status(200).json({
         token,
-        // refreshToken,
+        refreshToken,
       });
     } catch (err) {
       console.log('««««« err »»»»»', err);
@@ -96,13 +96,12 @@ module.exports = {
 
   basicLogin: async (req, res, next) => {
     try {
-      const user = await Customer.findById(req.user._id).select('-password').lean();
-      const token = generateToken(user);
-      // const refreshToken = generateRefreshToken(user._id);
+      const token = generateToken(req.user);
+      const refreshToken = generateRefreshToken(req.user._id);
 
       res.json({
         token,
-        // refreshToken,
+        refreshToken,
       });
     } catch (err) {
       console.log('««««« err »»»»»', err);
@@ -113,10 +112,24 @@ module.exports = {
   getMe: async (req, res, next) => {
     try {
       res.status(200).json({
-        message: "Layas thoong tin thanfh coong",
+        message: "Lấy thông tin người dùng thành công",
         payload: req.user,
       });
     } catch (err) {
+      res.sendStatus(500);
+    }
+  },
+
+  getMyOrder: async (req, res, next) => {
+    try {
+      const orders = await Order.find({ employeeId: req.user._id })
+
+      return res.status(200).json({
+        message: "Lấy thông tin người dùng thành công",
+        payload: orders,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
       res.sendStatus(500);
     }
   },

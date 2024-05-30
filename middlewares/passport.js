@@ -18,7 +18,7 @@ const passportVerifyToken = new JwtStrategy(
   },
   async (payload, done) => {
     try {
-      const user = await Customer.findOne({
+      const user = await Employee.findOne({
         _id: payload._id,
         isDeleted: false,
       }).select('-password');
@@ -57,13 +57,15 @@ const passportVerifyAccount = new LocalStrategy({ usernameField: 'email' },
 
 const passportConfigBasic = new BasicStrategy(async function (username, password, done) {
   try {
-    const user = await Customer.findOne({ email: username, isDeleted: false });
+    const user = await Employee.findOne({ email: username, isDeleted: false });
 
     if (!user) return done(null, false);
 
     const isCorrectPass = await user.isValidPass(password);
 
     if (!isCorrectPass) return done(null, false);
+
+    user.password = undefined;
 
     return done(null, user);
   } catch (error) {

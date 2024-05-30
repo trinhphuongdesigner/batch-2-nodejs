@@ -11,6 +11,7 @@ const {
   checkRefreshToken,
   getMe,
   basicLogin,
+  getMyOrder,
 } = require('./controller');
 
 router.route('/login')
@@ -33,6 +34,12 @@ router.route('/profile')
   .get(
     passport.authenticate('jwt', { session: false }),
     getMe,
+  );
+
+router.route('/my-orders')
+  .get(
+    passport.authenticate('jwt', { session: false }),
+    getMyOrder,
   );
 
 module.exports = router;
