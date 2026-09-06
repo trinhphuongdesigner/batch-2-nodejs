@@ -5,6 +5,7 @@ const {
   Category,
   Supplier,
   Customer,
+  Employee,
   Order,
 } = require('../../models');
 
@@ -36,7 +37,9 @@ module.exports = {
 
       if (discount) conditionFind.discount = { $lte: discount };
 
-      let results = await Product.find(conditionFind).populate("cc").populate("supplier");
+      // FIX: trước đây populate("cc") -> sai tên virtual, mongoose 8 sẽ ném StrictPopulateError.
+      // Tên virtual đúng khai báo trong models/Product.js là "category" và "supplier".
+      let results = await Product.find(conditionFind).populate("category").populate("supplier");
       let total = await Product.countDocuments();
 
       return res.send({
@@ -102,8 +105,9 @@ module.exports = {
 
   question2: async (req, res, next) => {
     try {
+      // Đề (file excel - dòng 2): "Hiển thị tất cả các mặt hàng có tồn kho <= 5"
       const conditionFind = {
-        stock: { $lte: 100 },
+        stock: { $lte: 5 },
       };
 
       console.log('««««« conditionFind »»»»»', conditionFind);
@@ -331,7 +335,8 @@ module.exports = {
 
       let results = await Product.aggregate()
         .addFields({ disPrice: d })
-        .match({ $expr: { $lte: ['$disPrice', 100] } })
+        // FIX: đề là "<= 1000" (không phải 100)
+        .match({ $expr: { $lte: ['$disPrice', 1000] } })
         .project({
           categoryId: 0,
           supplierId: 0,
@@ -390,7 +395,8 @@ module.exports = {
 
       let results = await Product.aggregate()
         .addFields({ disPrice: d })
-        .match({ $expr: { $lte: ['$disPrice', 100] } })
+        // FIX: đề là "<= 1000" (không phải 100)
+        .match({ $expr: { $lte: ['$disPrice', 1000] } })
         .lookup({
           from: 'categories',
           localField: 'categoryId',
@@ -506,7 +512,9 @@ module.exports = {
 
   question5: async (req, res, next) => {
     try {
-      const { year } = req.query;
+      // FIX: req.query.year là chuỗi ("1990"), còn { $year: ... } trả về Number.
+      // Nếu không ép kiểu thì $eq luôn false. Phải Number(year).
+      const year = Number(req.query.year);
       const namSinhTrongDB = { $year: '$birthday' }
 
       const conditionFind = {
@@ -535,20 +543,16 @@ module.exports = {
     try {
       const year = Number(req.query.year);
 
-      const conditionFind = {
-        $expr: {
-          $eq: [{ $year: '$birthday' }, year],
-        },
-      };
-
+      // FIX: '$birthYear' phải là chuỗi tham chiếu field, không phải biến JS `birthYear`
+      // (code cũ ném ReferenceError: birthYear is not defined).
       let results = await Customer.aggregate()
         .addFields({
-          birthYear: { $year: '$birthday' }
+          birthYear: { $year: '$birthday' },
         })
-        .match({
-          $expr: { $eq: [birthYear, year] }
-        })
-      // .match(conditionFind)
+        // Sau khi đã addFields thì so khớp trực tiếp, không cần $expr:
+        .match({ birthYear: year })
+        // Cách khác (tương đương):
+        // .match({ $expr: { $eq: ['$birthYear', year] } })
 
       let total = await Customer.countDocuments();
 
@@ -717,8 +721,9 @@ module.exports = {
       const conditionFind = {
         $expr: {
           $and: [
-            // { $eq: ['$status', status] },
-            { status },
+            // FIX: trong $expr/$and phải là biểu thức boolean.
+            // `{ status }` là 1 object -> luôn "truthy" -> KHÔNG lọc gì cả.
+            { $eq: ['$status', status] },
             { $eq: [{ $dayOfMonth: '$shippedDate' }, { $dayOfMonth: findDate }] },
             { $eq: [{ $month: '$shippedDate' }, { $month: findDate }] },
             { $eq: [{ $year: '$shippedDate' }, { $year: findDate }] },
@@ -862,6 +867,180 @@ module.exports = {
         .lean();
 
       let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  // ===========================================================================
+  // Câu 9: Hiển thị tất cả các đơn hàng có trạng thái là CANCELED
+  // (giống câu 7 nhưng cố định status = CANCELED, vẫn cho phép truyền ?status=)
+  // ===========================================================================
+  question9: async (req, res, next) => {
+    try {
+      const status = req.query.status || 'CANCELED';
+
+      // ----- CÁCH 1: find + populate (chọn lọc field trả về bằng select) -----
+      let results = await Order.find({ status })
+        .populate({ path: 'customer', select: 'firstName lastName' })
+        .populate({ path: 'employee', select: 'firstName lastName' })
+        .populate({ path: 'productList.product', select: { name: 1, price: 1 } })
+        .lean();
+
+      // ----- CÁCH 2: aggregate -----
+      // let results = await Order.aggregate().match({ status });
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  // ===========================================================================
+  // Câu 10: Hiển thị tất cả các đơn hàng có trạng thái là CANCELED trong ngày hôm nay
+  // ?date=YYYY-MM-DD (không truyền -> lấy hôm nay), ?status= (mặc định CANCELED)
+  // ===========================================================================
+  question10: async (req, res, next) => {
+    try {
+      const status = req.query.status || 'CANCELED';
+      const findDate = req.query.date ? new Date(req.query.date) : new Date();
+
+      // ----- CÁCH 1: find + $expr, so khớp ngày/tháng/năm của createdDate -----
+      const conditionFind = {
+        $expr: {
+          $and: [
+            { $eq: ['$status', status] },
+            { $eq: [{ $dayOfMonth: '$createdDate' }, { $dayOfMonth: findDate }] },
+            { $eq: [{ $month: '$createdDate' }, { $month: findDate }] },
+            { $eq: [{ $year: '$createdDate' }, { $year: findDate }] },
+          ],
+        },
+      };
+
+      let results = await Order.find(conditionFind).lean();
+
+      // ----- CÁCH 2: aggregate, lọc theo khoảng [đầu ngày, đầu ngày hôm sau) -----
+      // const start = new Date(findDate); start.setHours(0, 0, 0, 0);
+      // const end = new Date(start); end.setDate(end.getDate() + 1);
+      // let results = await Order.aggregate().match({
+      //   status,
+      //   createdDate: { $gte: start, $lt: end },
+      // });
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  // ===========================================================================
+  // Câu 11: Hiển thị tất cả các đơn hàng có hình thức thanh toán là CASH
+  // Câu 12: ... là CREDIT_CARD  (dùng chung 1 handler, phân biệt bằng ?paymentType=)
+  // enum trong models/Order.js: ['CASH', 'CREDIT_CARD']
+  // ===========================================================================
+  question11: async (req, res, next) => {
+    try {
+      const paymentType = req.query.paymentType || 'CASH';
+
+      // ----- CÁCH 1: find -----
+      let results = await Order.find({ paymentType })
+        .populate({ path: 'customer', select: 'firstName lastName' })
+        .lean();
+
+      // ----- CÁCH 2: aggregate -----
+      // let results = await Order.aggregate().match({ paymentType });
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  question12: async (req, res, next) => {
+    try {
+      const paymentType = req.query.paymentType || 'CREDIT_CARD';
+
+      let results = await Order.find({ paymentType })
+        .populate({ path: 'customer', select: 'firstName lastName' })
+        .lean();
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  // ===========================================================================
+  // Câu 14: Hiển thị tất cả các nhân viên có sinh nhật là hôm nay
+  // (giống câu 6 nhưng đổi collection Customer -> Employee)
+  // ?date=YYYY-MM-DD để test 1 ngày bất kỳ.
+  // ===========================================================================
+  question14: async (req, res, next) => {
+    try {
+      const { date } = req.query;
+      const today = date ? new Date(date) : new Date();
+
+      // ----- CÁCH 1: find + $expr (so ngày + tháng, KHÔNG so năm) -----
+      const conditionFind = {
+        $expr: {
+          $and: [
+            { $eq: [{ $dayOfMonth: '$birthday' }, { $dayOfMonth: today }] },
+            { $eq: [{ $month: '$birthday' }, { $month: today }] },
+          ],
+        },
+      };
+
+      let results = await Employee.find(conditionFind);
+
+      // ----- CÁCH 2: aggregate -----
+      // let results = await Employee.aggregate()
+      //   .addFields({
+      //     d: { $dayOfMonth: '$birthday' },
+      //     m: { $month: '$birthday' },
+      //   })
+      //   .match({ d: today.getDate(), m: today.getMonth() + 1 });
+
+      let total = await Employee.countDocuments();
 
       return res.send({
         code: 200,

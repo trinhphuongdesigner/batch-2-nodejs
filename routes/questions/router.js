@@ -25,6 +25,11 @@ const {
   question8b,
   question8c,
   question8d,
+  question9,
+  question10,
+  question11,
+  question12,
+  question14,
 } = require('./controller1');
 
 const {
@@ -32,6 +37,7 @@ const {
   question15,
   question16a,
   question16b,
+  question17,
   question18,
   question19,
   question20,
@@ -47,8 +53,10 @@ const {
   question26b,
   question26c,
   question27,
+  question28,
   question29,
   question30,
+  question31,
   question32,
   question33,
   question34,
@@ -79,8 +87,16 @@ router.get('/8a', question8a);
 router.get('/8b', question8b);
 router.get('/8c', question8c);
 router.get('/8d', question8d);
+router.get('/9', question9);
+router.get('/10', question10);
+router.get('/11', question11);
+router.get('/12', question12);
 router.get('/13', question13);
+router.get('/14', question14);
 router.get('/15', question15);
+router.get('/16', question16a);
+router.get('/16b', question16b);
+router.get('/17', question17);
 router.get('/18', question18);
 router.get('/19', question19);
 router.get('/20', question20);
@@ -93,8 +109,10 @@ router.get('/26', question26);
 router.get('/26b', question26b);
 router.get('/26c', question26c);
 router.get('/27', question27);
+router.get('/28', question28);
 router.get('/29', question29);
 router.get('/30', question30);
+router.get('/31', question31);
 router.get('/32', question32);
 router.get('/33', question33);
 router.get('/34', question34);

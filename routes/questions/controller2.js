@@ -10,33 +10,32 @@ const {
 } = require('../../models');
 
 module.exports = {
+  // Đề (excel - dòng 13): "Hiển thị tất cả các đơn hàng có ĐỊA CHỈ GIAO HÀNG là Hà Nội"
+  // => lọc theo field `shippingAddress` của chính Order (không phải address của Customer).
+  // Lưu ý: `shippingAddress` có trong thiết kế bảng Orders (Phần I) nhưng models/Order.js
+  // chưa khai báo -> vẫn truy vấn được bằng aggregate (chạy trên document thô).
   question13: async (req, res, next) => {
     try {
-      let { address } = req.query;
+      let { address = 'Hà Nội' } = req.query;
 
+      // ----- CÁCH 1: aggregate + $match regex trên shippingAddress -----
       let results = await Order.aggregate()
-        .lookup({
-          from: 'customers',
-          localField: 'customerId',
-          foreignField: '_id',
-          as: 'customer',
-        })
-        .unwind('customer')
-        .match({
-          'customer.address': fuzzySearch(address),
-        })
-        // .match({
-        //   'customer.address': {
-        //     $regex: new RegExp(address),
-        //     $options: 'i',
-        //   },
-        // })
+        .match({ shippingAddress: fuzzySearch(address) })
         .project({
           customerId: 0,
           employeeId: 0,
           createdAt: 0,
           updatedAt: 0,
-        })
+        });
+
+      // ----- CÁCH 2: find (mongoose 7+ mặc định strictQuery=false nên vẫn lọc được field ngoài schema) -----
+      // let results = await Order.find({ shippingAddress: fuzzySearch(address) }).lean();
+
+      // ----- CÁCH 3 (nếu đề hiểu là địa chỉ của khách đặt hàng): lookup customer rồi match customer.address -----
+      // let results = await Order.aggregate()
+      //   .lookup({ from: 'customers', localField: 'customerId', foreignField: '_id', as: 'customer' })
+      //   .unwind('customer')
+      //   .match({ 'customer.address': fuzzySearch(address) });
 
       let total = await Order.countDocuments();
 
@@ -118,6 +117,40 @@ module.exports = {
       .unwind('employees');
 
       let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  // ===========================================================================
+  // Câu 17: Hiển thị tất cả các mặt hàng cùng với thông tin chi tiết của
+  //         Category và Supplier
+  // ===========================================================================
+  question17: async (req, res, next) => {
+    try {
+      // ----- CÁCH 1: populate qua virtual (models/Product.js đã khai báo) -----
+      let results = await Product.find()
+        .populate('category')
+        .populate('supplier')
+        .lean();
+
+      // ----- CÁCH 2: aggregate + $lookup -----
+      // let results = await Product.aggregate()
+      //   .lookup({ from: 'categories', localField: 'categoryId', foreignField: '_id', as: 'category' })
+      //   .unwind({ path: '$category', preserveNullAndEmptyArrays: true })
+      //   .lookup({ from: 'suppliers', localField: 'supplierId', foreignField: '_id', as: 'supplier' })
+      //   .unwind({ path: '$supplier', preserveNullAndEmptyArrays: true })
+      //   .project({ categoryId: 0, supplierId: 0 });
+
+      let total = await Product.countDocuments();
 
       return res.send({
         code: 200,

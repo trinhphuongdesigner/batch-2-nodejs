@@ -264,8 +264,9 @@ module.exports = {
           employees: { $push: '$$ROOT' },
         })
         .sort({ _id: -1 })
-        // .limit(3)
-        // .skip(0);
+        // "top 3" -> lấy 3 nhóm tổng tiền cao nhất (mỗi nhóm có thể gồm nhiều NV đồng hạng)
+        .limit(3);
+      // .skip(0);
 
       let total = await Order.countDocuments();
 
@@ -788,6 +789,133 @@ module.exports = {
         })
 
       let total = await Customer.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  // ===========================================================================
+  // Câu 28: Hiển thị top 5 khách hàng mua hàng với tổng số tiền mua được
+  //         từ cao đến thấp trong khoảng từ ngày, đến ngày
+  //         (đối xứng với câu 27 - top 3 nhân viên)
+  // ===========================================================================
+  question28: async (req, res, next) => {
+    try {
+      let { fromDate, toDate } = req.query;
+      const conditionFind = getQueryDateTime(fromDate, toDate);
+
+      let results = await Order.aggregate()
+        .match(conditionFind)
+        .unwind('productList')
+        // thành tiền từng dòng = giá * (100 - discount) / 100 * số lượng
+        .addFields({
+          'productList.total': {
+            $multiply: [
+              {
+                $divide: [
+                  {
+                    $multiply: [
+                      '$productList.price',
+                      { $subtract: [100, '$productList.discount'] },
+                    ],
+                  },
+                  100,
+                ],
+              },
+              '$productList.quantity',
+            ],
+          },
+        })
+        .group({
+          _id: '$customerId',
+          totalPurchase: { $sum: '$productList.total' },
+        })
+        .lookup({
+          from: 'customers',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'customer',
+        })
+        .unwind('customer')
+        .project({
+          firstName: '$customer.firstName',
+          lastName: '$customer.lastName',
+          email: '$customer.email',
+          phoneNumber: '$customer.phoneNumber',
+          address: '$customer.address',
+          birthday: '$customer.birthday',
+          totalPurchase: 1,
+        })
+        .sort({ totalPurchase: -1 })
+        .limit(5);
+
+      // ----- CÁCH 2: gom nhóm theo totalPurchase để xử lý đồng hạng rồi mới limit 5 -----
+      // ... .sort({ totalPurchase: -1 })
+      //     .group({ _id: '$totalPurchase', customers: { $push: '$$ROOT' } })
+      //     .sort({ _id: -1 })
+      //     .limit(5);
+
+      let total = await Order.countDocuments();
+
+      return res.send({
+        code: 200,
+        total,
+        totalResult: results.length,
+        payload: results,
+      });
+    } catch (err) {
+      console.log('««««« err »»»»»', err);
+      return res.status(500).json({ code: 500, error: err });
+    }
+  },
+
+  // ===========================================================================
+  // Câu 31: Hiển thị tất cả đơn hàng với tổng số tiền trong khoảng từ ngày, đến ngày
+  //         (giống câu 32 nhưng KHÔNG sắp xếp)
+  // ===========================================================================
+  question31: async (req, res, next) => {
+    try {
+      let { fromDate, toDate } = req.query;
+      const conditionFind = getQueryDateTime(fromDate, toDate);
+
+      let results = await Order.aggregate()
+        .match(conditionFind)
+        .unwind('productList')
+        .addFields({
+          discountedPrice: {
+            $divide: [
+              {
+                $multiply: [
+                  '$productList.price',
+                  { $subtract: [100, '$productList.discount'] },
+                ],
+              },
+              100,
+            ],
+          },
+        })
+        .group({
+          _id: '$_id',
+          createdDate: { $first: '$createdDate' },
+          shippedDate: { $first: '$shippedDate' },
+          status: { $first: '$status' },
+          paymentType: { $first: '$paymentType' },
+          customerId: { $first: '$customerId' },
+          employeeId: { $first: '$employeeId' },
+          total: {
+            $sum: { $multiply: ['$discountedPrice', '$productList.quantity'] },
+          },
+        });
+
+      let total = await Order.countDocuments();
 
       return res.send({
         code: 200,
